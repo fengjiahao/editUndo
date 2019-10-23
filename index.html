@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>编辑</title>
+    <link rel="stylesheet" href="">
+</head>
+
+<body>
+    <!-- DOM -->
+    <h1>编辑</h1>
+    <h3>编辑器-tools</h3>
+    <button id="addDOM">增加-item</button>
+    <button id="deteleDOM">删除-item</button>
+    <button id="saveDOM">保存-item</button>
+    </br>
+    <button id="undo">撤销键入-undo</button>
+    <button id="redo">重做键入-redo</button>
+    <button id="clear">清除-clear</button>
+
+    <h3>edit</h3>
+    <div class="list-edit"></div>
+    <h3>store</h3>
+    <div class="list-tree"></div>
+
+    <!-- style -->
+    <style type="text/css">
+        .list-edit,
+        .list-tree,
+        .list-state {
+            padding: 10px;
+            border: 1px solid #333333;
+        }
+
+        .item-DOM {
+            padding-bottom: 5px;
+            margin-bottom: 5px;
+            border-bottom: 1px dotted #333333;
+        }
+    </style>
+
+    <!-- script -->
+    <script type="module" crossorigin>
+        import mytemp from './undo.js';
+
+        var history = new mytemp();
+
+        history.initialize({
+            maxLength: 10,
+        });
+
+        history.changed = function (e) {
+            btnState(history)
+        };
+
+        /* undo 监控按钮 */
+        function btnState(history) {
+            let undo_btn = document.querySelector('#undo');
+            let redo_btn = document.querySelector('#redo');
+            undo_btn.disabled = !history.isUndo();
+            redo_btn.disabled = !history.isRedo();
+        }
+
+        /* undo 监控事件 */
+        (function editEventList() {
+            let app = document.querySelector('.list-edit');
+            let undo_btn = document.querySelector('#undo');
+            let redo_btn = document.querySelector('#redo');
+            let clear_btn = document.querySelector('#clear');
+
+            let handlerUndo = function (e) {
+                history.undo().then(res => {
+                    renderDOM(res)
+                }).catch(error => {
+                    console.log(error)
+                })
+            };
+            let handlerRedo = function (e) {
+                history.redo().then(res => {
+                    renderDOM(res)
+                }).catch(error => {
+                    console.log(error)
+                })
+            };
+            let handlerClear = function (e) {
+                history.clear().then(res => {
+                    app.innerHTML = ''
+                });
+            };
+
+            undo_btn.addEventListener("click", handlerUndo, false);
+            redo_btn.addEventListener("click", handlerRedo, false);
+            clear_btn.addEventListener("click", handlerClear, false);
+            btnState(history)
+        })();
+
+
+        /* 根据参数, 重新渲染 */
+        function renderDOM(nodeList) {
+            if (nodeList.length === 1 && nodeList[0] === null) return
+            let temp = document.querySelector('.list-edit')
+            let add = []
+            for (var i = 0; i < nodeList.length; i++) {
+                let _temp = `<div>
+					<div class="item-DOM">
+						<label for="item-${nodeList[i].key}">item-${nodeList[i].key}</label>
+						<input class="input-text" id="item-${nodeList[i].key}" key="${nodeList[i].key}" type="text" name="" value="${nodeList[i].value}" placeholder=""/>
+					</div>
+				</div>`;
+                add += _temp
+            }
+            temp.innerHTML = add
+        }
+
+        /* 编辑器 创建item元素 */
+        function createItemDOM(key) {
+            let _temp = `<div class="item-DOM">
+				<label for="item-${key}">item-${key}</label>
+				<input class="input-text" id="item-${key}" key="${key}" type="text" name="" value="" placeholder=""/>
+			</div>`
+            let temp = document.createElement('div')
+            temp.innerHTML = _temp
+            return temp
+        }
+
+        /* 编辑器 保存当前数据 =>> [Object, Object] */
+        function editSave() {
+            let temp = document.querySelector('.list-edit')
+            let temps = document.querySelectorAll('.input-text')
+            if (temp.childElementCount === 0) return
+            let data = []
+            for (var i = 0; i < temps.length; i++) {
+                let json = {
+                    name: temps[i].id,
+                    value: temps[i].value,
+                    key: temps[i].attributes.key.value,
+                }
+                data.push(json)
+            }
+            history.save(data)
+        }
+
+		/**
+		 * 编辑器 监控-各类事件 
+		 * `focus`, `blur`不冒泡
+		 */
+        (function editEventList() {
+            let app = document.querySelector('.list-edit');
+            let add_btn = document.querySelector('#addDOM')
+            let del_btn = document.querySelector('#deteleDOM')
+            let save_btn = document.querySelector('#saveDOM')
+
+            let handlerFocus = function (e) {
+                if (e.target && e.target.nodeName.toLowerCase() === "input") {
+                    e.target.style.background = '#ed166e';
+                }
+            };
+            let handlerBlur = function (e) {
+                if (e.target && e.target.nodeName.toLowerCase() === "input") {
+                    e.target.style.background = '';
+                }
+                editSave()
+            };
+            let handlerAdd = function (e) {
+                let addItem = createItemDOM(app.childElementCount)
+                app.appendChild(addItem)
+                editSave()
+            };
+            let handlerDel = function (e) {
+                if (app.lastChild) {
+                    app.removeChild(app.lastChild);
+                    editSave()
+                }
+            };
+            let handlerSave = function (e) {
+                editSave()
+            };
+
+            add_btn.addEventListener("click", handlerAdd, false);
+            del_btn.addEventListener("click", handlerDel, false);
+            save_btn.addEventListener("click", handlerSave, false);
+            app.addEventListener("focus", handlerFocus, true);
+            app.addEventListener("blur", handlerBlur, true);
+
+            /* removeEventListener */
+            // add_btn.removeEventListener("click", handlerAdd, false);
+            // del_btn.removeEventListener("click", handlerDel, false);
+            // save_btn.removeEventListener("click", handlerSave, false);
+            // app.removeEventListener("focus", handlerFocus, true);
+            // app.removeEventListener("blur", handlerBlur, true); 
+        })();
+    </script>
+</body>
+
+</html>
