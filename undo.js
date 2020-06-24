@@ -30,7 +30,7 @@ export default class editUndo {
         this.maxLength = (typeof settings.maxLength != 'undefined') ? settings.maxLength : defaultOptions.maxLength;
 
         this.initialItem = null;
-        this.clear()
+        this.clear();
     }
     changed() {
         // toDo
