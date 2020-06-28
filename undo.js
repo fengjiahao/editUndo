@@ -37,7 +37,7 @@ export default class editUndo {
     }
     /* @param  {[Object]} current 当前保存的对象 */
     save(current) {
-        console.log('current-obj', current)
+        console.log('current-object（当前对象）:', current)
         if (this.position >= this.maxLength) truncate(this.stack, this.maxLength);
         this.position = Math.min(this.position, this.stack.length - 1);
         this.stack = this.stack.slice(0, this.position + 1);
