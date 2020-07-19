@@ -4,6 +4,7 @@ function truncate(stack, limit) {
     }
 }
 /**
+ *
  * ''                 null
  * [1]                null, 1
  * [1, 2]             null, 1, 2
@@ -11,14 +12,15 @@ function truncate(stack, limit) {
  * 1, [2, 3, 4]       null, 2, 3, 4
  * 1, 2, [3, 4, 5]    null, 3, 4, 5
  * 1, 2, 3, [4, 5, 6] null, 4, 5, 6
- * maxLength = 3
- * position 0,1,2,3
+ *
+ * maxLength 3
+ * position  0,1,2,3
  *
  * @param maxLength    最大保存值
  * @param initialItem  stack初始元素
  * @param stack        数组, 初始化后[null]
  * @param position     stack中的`指针`,实现redo,undo
- * @param changed     外部方法
+ * @param changed      外部方法
  */
 export default class editUndo {
     /* @param  {[Object]} options 传入参数 */
